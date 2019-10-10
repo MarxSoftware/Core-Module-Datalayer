@@ -37,8 +37,6 @@ package com.thorstenmarx.webtools.core.modules.datalayer;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-import com.google.common.collect.Sets;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
