@@ -65,8 +65,7 @@ public class LevelDbDataLayerTest {
 	public void testAdd() {
 
 		SegmentData data = new SegmentData();
-		data.addSegment("eins", 1);
-		data.addSegment("zwei", 2);
+		data.setSegment(new SegmentData.Segment("eins", 1, "1"));
 
 		layer.add("testAdd", "segments", data);
 
@@ -75,19 +74,19 @@ public class LevelDbDataLayerTest {
 		Assertions.assertThat(list).isPresent();
 		final List<SegmentData> result = list.get();
 		Assertions.assertThat(result).hasSize(1);
-		Assertions.assertThat(result.get(0).getSegments()).isNotNull().isNotEmpty().containsExactlyInAnyOrder("eins", "zwei");
+		Assertions.assertThat(result.get(0).getSegment()).isNotNull().isEqualTo(new SegmentData.Segment("eins", 1, "1"));
 	}
 
 	@Test
 	public void testAdd_2() {
 
 		SegmentData data = new SegmentData();
-		data.addSegment("eins", 1);
+		data.setSegment(new SegmentData.Segment("eins", 1, "1"));
 
 		layer.add("testAdd", "segments2", data);
 
 		data = new SegmentData();
-		data.addSegment("zwei", 2);
+		data.setSegment(new SegmentData.Segment("zwei", 2, "2"));
 		layer.add("testAdd", "segments2", data);
 
 		Optional<List<SegmentData>> list = layer.list("testAdd", "segments2", SegmentData.class);
@@ -97,19 +96,11 @@ public class LevelDbDataLayerTest {
 		Assertions.assertThat(result).hasSize(2);
 	}
 
-	@Test(expectedExceptions = UnsupportedOperationException.class)
-	public void testUnmodifiable() {
-
-		SegmentData data = new SegmentData();
-		data.getSegments().add("eins");
-	}
-
 	@Test
 	public void testMore() {
 
 		SegmentData data = new SegmentData();
-		data.addSegment("eins", 1);
-		data.addSegment("zwei", 2);
+		data.setSegment(new SegmentData.Segment("eins", 1, "1"));
 
 		final long before = System.currentTimeMillis();
 		for (int i = 0; i < 1000; i++) {
@@ -126,11 +117,10 @@ public class LevelDbDataLayerTest {
 
 		SegmentData data = new SegmentData();
 
-		data.addSegment("eins", 1);
+		data.setSegment(new SegmentData.Segment("eins", 1, "1"));
 
 		layer.add("testUpdateMulitpleTimes", "segments", data);
 
-		data.addSegment("zwei", 2);
 		for (int i = 0; i < 1000; i++) {
 			layer.add("testUpdateMulitpleTimes", "segments", data);
 		}
@@ -140,11 +130,10 @@ public class LevelDbDataLayerTest {
 	public void test_clear() {
 
 		SegmentData data = new SegmentData();
-		data.addSegment("eins", 1);
+		data.setSegment(new SegmentData.Segment("eins", 1, "1"));
 
 		layer.add("testUpdateMulitpleTimes", "segments", data);
 
-		data.addSegment("zwei", 2);
 		for (int i = 0; i < 100; i++) {
 			layer.add("testUpdateMulitpleTimes", "segments", data);
 		}
