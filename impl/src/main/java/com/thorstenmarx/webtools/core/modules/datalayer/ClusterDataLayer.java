@@ -39,11 +39,11 @@ public class ClusterDataLayer implements DataLayer, MessageService.MessageListen
 		this.wrapped_layer = wrapped_layer;
 		this.cluster = cluster;
 		
-		cluster.getMessageService().registerMessageListener(this);
+		cluster.getRAFTMessageService().registerMessageListener(this);
 	}
 	
 	public void close () {
-		cluster.getMessageService().unregisterMessageListener(this);
+		cluster.getRAFTMessageService().unregisterMessageListener(this);
 	}
 	
 	@Override
@@ -67,7 +67,7 @@ public class ClusterDataLayer implements DataLayer, MessageService.MessageListen
 		message.setType(DATALAYER_ADD);
 		message.setPayload(gson.toJson(payload));
 		try {	
-			cluster.getMessageService().publish(message);
+			cluster.getRAFTMessageService().publish(message);
 			return true;
 		} catch (IOException ex) {
 			LOGGER.error("", ex);
@@ -90,7 +90,7 @@ public class ClusterDataLayer implements DataLayer, MessageService.MessageListen
 		message.setType(DATALAYER_REMOVE);
 		message.setPayload(gson.toJson(payload));
 		try {	
-			cluster.getMessageService().publish(message);
+			cluster.getRAFTMessageService().publish(message);
 		} catch (IOException ex) {
 			LOGGER.error("", ex);
 		}
@@ -105,7 +105,7 @@ public class ClusterDataLayer implements DataLayer, MessageService.MessageListen
 		message.setType(DATALAYER_CLEAR);
 		message.setPayload(gson.toJson(payload));
 		try {	
-			cluster.getMessageService().publish(message);
+			cluster.getRAFTMessageService().publish(message);
 		} catch (IOException ex) {
 			LOGGER.error("", ex);
 		}
