@@ -21,14 +21,10 @@ package com.thorstenmarx.webtools.core.modules.datalayer;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-import com.thorstenmarx.webtools.api.datalayer.Expirable;
 import com.thorstenmarx.webtools.api.datalayer.SegmentData;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.Assertions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -69,31 +65,11 @@ public class LevelDbDataLayerTest {
 
 		layer.add("testAdd", "segments", data);
 
-		Optional<List<SegmentData>> list = layer.list("testAdd", "segments", SegmentData.class);
+		Optional<SegmentData> list = layer.get("testAdd", "segments", SegmentData.class);
 
 		Assertions.assertThat(list).isPresent();
-		final List<SegmentData> result = list.get();
-		Assertions.assertThat(result).hasSize(1);
-		Assertions.assertThat(result.get(0).getSegment()).isNotNull().isEqualTo(new SegmentData.Segment("eins", 1, "1"));
-	}
-
-	@Test
-	public void testAdd_2() {
-
-		SegmentData data = new SegmentData();
-		data.setSegment(new SegmentData.Segment("eins", 1, "1"));
-
-		layer.add("testAdd", "segments2", data);
-
-		data = new SegmentData();
-		data.setSegment(new SegmentData.Segment("zwei", 2, "2"));
-		layer.add("testAdd", "segments2", data);
-
-		Optional<List<SegmentData>> list = layer.list("testAdd", "segments2", SegmentData.class);
-
-		Assertions.assertThat(list).isPresent();
-		final List<SegmentData> result = list.get();
-		Assertions.assertThat(result).hasSize(2);
+		final SegmentData result = list.get();
+		Assertions.assertThat(result.getSegment()).isNotNull().isEqualTo(new SegmentData.Segment("eins", 1, "1"));
 	}
 
 	@Test
@@ -125,24 +101,4 @@ public class LevelDbDataLayerTest {
 			layer.add("testUpdateMulitpleTimes", "segments", data);
 		}
 	}
-
-	@Test()
-	public void test_clear() {
-
-		SegmentData data = new SegmentData();
-		data.setSegment(new SegmentData.Segment("eins", 1, "1"));
-
-		layer.add("testUpdateMulitpleTimes", "segments", data);
-
-		for (int i = 0; i < 100; i++) {
-			layer.add("testUpdateMulitpleTimes", "segments", data);
-		}
-		
-		layer.clear("segments");
-		
-		layer.each((uid, sd) -> {
-			Assertions.assertThat(true).isFalse().as("should never be called");
-		}, "segments", SegmentData.class);
-	}
-
 }

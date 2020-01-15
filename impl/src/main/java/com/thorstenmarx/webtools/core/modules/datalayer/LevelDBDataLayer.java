@@ -37,6 +37,7 @@ package com.thorstenmarx.webtools.core.modules.datalayer;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.thorstenmarx.webtools.api.datalayer.Data;
 import com.thorstenmarx.webtools.api.datalayer.DataLayer;
@@ -68,12 +69,8 @@ public class LevelDBDataLayer implements DataLayer {
 	private Gson gson = new Gson();
 	private DB db;
 
-	private final Index index;
-
 	public LevelDBDataLayer(final File parent) {
 		this.parent = parent;
-
-		index = new Index();
 	}
 
 	public void close() {
@@ -96,16 +93,6 @@ public class LevelDBDataLayer implements DataLayer {
 			DBFactory factory = new Iq80DBFactory();
 
 			db = factory.open(new File(folder, "leveldb"), options);
-
-			// build index
-			try (DBIterator iterator = db.iterator()) {
-				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-					final String stringKey = asString(iterator.peekNext().getKey());
-					final String[] splitted = split(stringKey);
-
-					index.addByUserKey(splitted[0], splitted[1], stringKey);
-				}
-			}
 		} catch (IOException ex) {
 			LOGGER.error("", ex);
 			throw new RuntimeException(ex);
@@ -113,43 +100,41 @@ public class LevelDBDataLayer implements DataLayer {
 	}
 
 	@Override
-	public <T extends Data> Optional<T> get(String uid, String key, Class<T> clazz) {
-		throw new UnsupportedOperationException();
+	public <T extends Data> Optional<T> get(final String uid, final String key, final Class<T> clazz) {
+		final String data = asString(db.get(bytes(uuid(uid, key))));
+		if (Strings.isNullOrEmpty(data)){
+			Optional.empty();
+		}
+		T value = gson.fromJson(data, clazz);
+		return Optional.of(value);
 	}
 
 	@Override
 	public void remove(final String uid, final String key) {
 		db.delete(bytes(uuid(uid, key)));
-		index.removeByUserKey(uid, key);
 	}
 
 	@Override
 	public boolean add(String uid, String key, Data value) {
 		try (StringWriter writer = new StringWriter();) {
 			gson.toJson(value, writer);
-			return internal_add(uid, key, writer.toString());
+			final String uuid = uuid(uid, key);
+			db.put(bytes(uuid), bytes(writer.toString()));
+			return true;
 		} catch (IOException ex) {
 			LOGGER.error("", ex);
 			throw new RuntimeException(ex);
 		}
 	}
-	
-	protected boolean internal_add (final String uid, final String key, final String value) {
-		final String uuid = uuid(uid, key);
-		db.put(bytes(uuid), bytes(value));
-		index.addByUserKey(uid, key, uuid);
-		
-		return true;
-	}
-	
-	
+
 	@Override
-	public boolean exists(String uid, String key) {
-		return index.containsByUserKey(uid, key);
+	public boolean exists(final String uid, final String key) {
+		byte[] content = db.get(bytes(uuid(uid, key)));
+		return content != null && content.length > 0;
 	}
 
 	public static String uuid(final String uid, final String key) {
-		return String.format("%s/%s/%s", uid, key, UUID.randomUUID().toString());
+		return String.format("%s/%s", uid, key);
 	}
 
 	public static String[] split(final String key) {
@@ -158,38 +143,17 @@ public class LevelDBDataLayer implements DataLayer {
 
 	@Override
 	public <T extends Data> void each(final BiConsumer<String, T> consumer, final String key, final Class<T> clazz) {
-		Set<String> uuids = index.findByKey(key);
-		if (uuids.isEmpty()) {
-			return;
-		}
-		uuids.forEach((uuid) -> {
-			final String uid = split(uuid)[0];
-			final String data = asString(db.get(bytes(uuid)));
-			consumer.accept(uid, gson.fromJson(data, clazz));
-		});
+		throw new UnsupportedOperationException("each not supported any more");
 	}
 
 	@Override
 	public <T extends Data> Optional<List<T>> list(String uid, String key, Class<T> clazz) {
-		if (!index.containsByUserKey(uid, key)) {
-			return Optional.empty();
-		}
-		List<T> result = new ArrayList<>();
-		Set<String> uuids = index.findByUserKey(uid, key);
-		uuids.forEach((uuid) -> {
-			final String data = asString(db.get(bytes(uuid)));
-			result.add(gson.fromJson(data, clazz));
-		});
-
-		return Optional.of(result);
+		throw new UnsupportedOperationException("list not supported any more");
+		
 	}
 
 	@Override
-	public void clear(String key) {
-		final Set<String> uuids = index.findByKey(key);
-		uuids.forEach((uuid) -> {
-			final String [] splitted = split(uuid);
-			remove(splitted[0], splitted[1]);
-		});
+	public void clear(final String key) {
+		throw new UnsupportedOperationException("clear not supported any more");
 	}
 }
