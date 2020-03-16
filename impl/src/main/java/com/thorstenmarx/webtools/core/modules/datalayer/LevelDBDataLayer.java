@@ -140,20 +140,4 @@ public class LevelDBDataLayer implements DataLayer {
 	public static String[] split(final String key) {
 		return key.split("/");
 	}
-
-	@Override
-	public <T extends Data> void each(final BiConsumer<String, T> consumer, final String key, final Class<T> clazz) {
-		throw new UnsupportedOperationException("each not supported any more");
-	}
-
-	@Override
-	public <T extends Data> Optional<List<T>> list(String uid, String key, Class<T> clazz) {
-		throw new UnsupportedOperationException("list not supported any more");
-		
-	}
-
-	@Override
-	public void clear(final String key) {
-		throw new UnsupportedOperationException("clear not supported any more");
-	}
 }
